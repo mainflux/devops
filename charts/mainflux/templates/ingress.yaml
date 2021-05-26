@@ -1,12 +1,20 @@
 # Copyright (c) Mainflux
 # SPDX-License-Identifier: Apache-2.0
 
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-{{- if .Values.ingress.annotations }}
   annotations:
+    nginx.org/mergeable-ingress-type: "master"
+{{- if .Values.ingress.annotations }}
 {{ toYaml .Values.ingress.annotations | indent 4 }}
+{{- end }}
+{{- if and (ne .Values.nginxInternal.mtls.tls "") (ne .Values.nginxInternal.mtls.intermediateCrt "") }}
+    nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
+    nginx.ingress.kubernetes.io/auth-tls-secret: {{ .Release.Namespace }}/ca
+    nginx.ingress.kubernetes.io/auth-tls-verify-client: "optional"
+    nginx.ingress.kubernetes.io/auth-tls-verify-depth: "2"
+    nginx.org/mergeable-ingress-type: "minion"
 {{- end }}
 {{- if .Values.ingress.labels }}
   labels:
@@ -16,16 +24,6 @@ metadata:
 spec:
   rules:
     - host: "{{ .Values.ingress.hostname }}"
-      http:
-        paths:
-          - path: /
-            backend:
-              serviceName: {{ .Release.Name }}-ui
-              servicePort: {{ .Values.ui.port }}
-          - path: /version
-            backend:
-              serviceName: {{ .Release.Name }}-things
-              servicePort: {{ .Values.things.httpPort }}
 {{- if .Values.ingress.tls }}
   tls:
     - hosts:
@@ -33,7 +31,46 @@ spec:
       secretName: {{ .Values.ingress.tls.secret }}
 {{- end }}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.org/mergeable-ingress-type: "minion"
+{{- if .Values.ingress.annotations }}
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+{{- end }}
+{{- if .Values.ingress.labels }}
+  labels:
+{{ toYaml .Values.ingress.labels | indent 4 }}
+{{- end }}
+  name: {{ .Release.Name }}-nginx-ingress-ui
+spec:
+  rules:
+    - host: "{{ .Values.ingress.hostname }}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-ui
+                port:
+                  number: {{ .Values.ui.port }}
+          - path: /version
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-things
+                port:
+                  number: {{ .Values.things.httpPort }}
+{{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.tls.hostname }}
+      secretName: {{ .Values.ingress.tls.secret }}
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -41,6 +78,7 @@ metadata:
 {{- if .Values.ingress.annotations }}
 {{ toYaml .Values.ingress.annotations | indent 4 }}
 {{- end }}
+    nginx.org/mergeable-ingress-type: "minion"
 {{- if .Values.ingress.labels }}
   labels:
 {{ toYaml .Values.ingress.labels | indent 4 }}
@@ -52,82 +90,132 @@ spec:
       http:
         paths:
           - path: /(users?.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-users
-              servicePort: {{ .Values.users.httpPort }}
+              service:
+                name: {{ .Release.Name }}-users
+                port:
+                  number: {{ .Values.users.httpPort }}
           - path: /(password?.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-users
-              servicePort: {{ .Values.users.httpPort }}
+              service:
+                name: {{ .Release.Name }}-users
+                port:
+                  number: {{ .Values.users.httpPort }}
           - path: /(groups?.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-users
-              servicePort: {{ .Values.users.httpPort }}
+              service:
+                name: {{ .Release.Name }}-users
+                port:
+                  number: {{ .Values.users.httpPort }}
           - path: /(tokens)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-users
-              servicePort: {{ .Values.users.httpPort }}
+              service:
+                name: {{ .Release.Name }}-users
+                port:
+                  number: {{ .Values.users.httpPort }}
           - path: /(things?.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-things
-              servicePort: {{ .Values.things.httpPort }}
+              service:
+                name: {{ .Release.Name }}-things
+                port:
+                  number: {{ .Values.things.httpPort }}
           - path: /(channels?.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-things
-              servicePort: {{ .Values.things.httpPort }}
+              service:
+                name: {{ .Release.Name }}-things
+                port:
+                  number: {{ .Values.things.httpPort }}
           - path: /(connect?.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-things
-              servicePort: {{ .Values.things.httpPort }}
+              service:
+                name: {{ .Release.Name }}-things
+                port:
+                  number: {{ .Values.things.httpPort }}
           - path: /version/users/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-users
-              servicePort: {{ .Values.users.httpPort }}
+              service:
+                name: {{ .Release.Name }}-users
+                port:
+                  number: {{ .Values.users.httpPort }}
           - path: /version/things/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-things
-              servicePort: {{ .Values.things.httpPort }}
+              service:
+                name: {{ .Release.Name }}-things
+                port:
+                  number: {{ .Values.things.httpPort }}
           - path: /version/http/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-adapter-http
-              servicePort: {{ default .Values.adapter_http.httpPort }}
+              service:
+                name: {{ .Release.Name }}-adapter-http
+                port:
+                  number: {{ default .Values.adapter_http.httpPort }}
 {{- if .Values.notifier_smtp.enabled }}
           - path: /smtp-notifier/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-notifier-smtp
-              servicePort: {{ .Values.notifier_smtp.httpPort }}
+              service:
+                name: {{ .Release.Name }}-notifier-smtp
+                port:
+                  number: {{ .Values.notifier_smtp.httpPort }}
 {{- end }}
 {{- if .Values.bootstrap.enabled }}
           - path: /bootstrap/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-bootstrap
-              servicePort: {{ .Values.bootstrap.httpPort }}
+              service:
+                name: {{ .Release.Name }}-bootstrap
+                port:
+                  number: {{ .Values.bootstrap.httpPort }}
           - path: /bs/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-bootstrap
-              servicePort: {{ .Values.bootstrap.httpPort }}
+              service:
+                name: {{ .Release.Name }}-bootstrap
+                port:
+                  number: {{ .Values.bootstrap.httpPort }}
 {{- end }}
 {{- if .Values.influxdb.enabled }}
           - path: /reader/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-influxdb-reader
-              servicePort: {{ .Values.influxdb.reader.httpPort }}
+              service:
+                name: {{ .Release.Name }}-influxdb-reader
+                port:
+                  number: {{ .Values.influxdb.reader.httpPort }}
 {{- end }}
 {{- if .Values.twins.enabled }}
           - path: /(twins?.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-twins
-              servicePort: {{ .Values.twins.httpPort }}
+              service:
+                name: {{ .Release.Name }}-twins
+                port:
+                  number: {{ .Values.twins.httpPort }}
           - path: /(states?.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-twins
-              servicePort: {{ .Values.twins.httpPort }}
+              service:
+                name: {{ .Release.Name }}-twins
+                port:
+                  number: {{ .Values.twins.httpPort }}
 {{- end }}
 {{- if .Values.adapter_opcua.enabled }}
           - path: /(browse?.*)
             backend:
-              serviceName: {{ .Release.Name }}-adapter-opcua
-              servicePort: {{ default .Values.adapter_opcua.httpPort }}
+              service:
+                name: {{ .Release.Name }}-adapter-opcua
+                port:
+                  number: {{ default .Values.adapter_opcua.httpPort }}
 {{- end }}
 {{- if .Values.ingress.tls }}
   tls:
@@ -136,17 +224,12 @@ spec:
       secretName: {{ .Values.ingress.tls.secret }}
 {{- end }}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
-{{- if and (ne .Values.nginxInternal.mtls.tls "") (ne .Values.nginxInternal.mtls.intermediateCrt "") }}
-    nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
-    nginx.ingress.kubernetes.io/auth-tls-secret: {{ .Release.Namespace }}/ca
-    nginx.ingress.kubernetes.io/auth-tls-verify-client: "optional"
-    nginx.ingress.kubernetes.io/auth-tls-verify-depth: "2"
-{{- end }}    
+    nginx.org/mergeable-ingress-type: "minion"
 {{- if .Values.ingress.annotations }}
 {{ toYaml .Values.ingress.annotations | indent 4 }}
 {{- end }}
@@ -162,28 +245,34 @@ spec:
         paths:
 {{- if and (ne .Values.nginxInternal.mtls.tls "") (ne .Values.nginxInternal.mtls.intermediateCrt "") }}
           - path: /(http/?.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-nginx-internal
-              servicePort: 80
+              service:
+                name: {{ .Release.Name }}-nginx-internal
+                port:
+                  number: 80
           - path: /(mqtt)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-nginx-internal
-              servicePort: 80
+              service:
+                name: {{ .Release.Name }}-nginx-internal
+                port:
+                  Number: 80
 {{- else }}
           - path: /http/?(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-adapter-http
-              servicePort: {{ .Values.adapter_http.httpPort }}
+              service:
+                name: {{ .Release.Name }}-adapter-http
+                port:
+                  number: {{ .Values.adapter_http.httpPort }}
           - path: /(mqtt)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ .Release.Name }}-mqtt
-              servicePort: {{ default .Values.mqtt.adapter.wsPort }}
-{{- end }}              
-{{- if .Values.ingress.tls }}
-  tls:
-    - hosts:
-        - {{ .Values.ingress.tls.hostname }}
-      secretName: {{ .Values.ingress.tls.secret }}
+              service:
+                name: {{ .Release.Name }}-mqtt
+                port:
+                  number: {{ default .Values.mqtt.adapter.wsPort }}
 {{- end }}
 ---
 apiVersion: v1
