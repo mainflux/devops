@@ -19,7 +19,7 @@ data:
       - address:
           socket_address:
             address: 0.0.0.0
-            port_value: {{ .Values.auth.grpcPort }}
+            port_value: {{ .Values.users.grpcPort }}
         filter_chains:
         - filters:
           - name: envoy.http_connection_manager
@@ -74,8 +74,8 @@ data:
         http2_protocol_options: {}
         hosts:
         - socket_address:
-            address: {{ .Release.Name }}-auth-headless
-            port_value: {{ .Values.auth.grpcPort }}
+            address: {{ .Release.Name }}-users
+            port_value: {{ .Values.users.grpcPort }}
       - name: things
         connect_timeout: 0.25s
         type: strict_dns
@@ -119,7 +119,7 @@ spec:
           ports:
             - containerPort: 1883
               protocol: TCP
-            - containerPort: {{ .Values.auth.grpcPort }}
+            - containerPort: {{ .Values.users.grpcPort }}
               protocol: TCP
             - containerPort: {{ .Values.things.authGrpcPort }}
               protocol: TCP
@@ -148,7 +148,7 @@ spec:
     - port: 1883
       protocol: TCP
       name: mqtt
-    - port: {{ .Values.auth.grpcPort }}
+    - port: {{ .Values.users.grpcPort }}
       protocol: TCP
       name: auth-grpc
     - port: {{ .Values.things.authGrpcPort }}

@@ -28,21 +28,29 @@ spec:
             - name: MF_THINGS_AUTH_GRPC_URL
               value: {{ .Release.Name }}-envoy:{{ .Values.things.authGrpcPort }}
             - name: MF_AUTH_GRPC_URL
-              value: {{ .Release.Name }}-envoy:{{ .Values.auth.grpcPort }}
+              value: {{ .Release.Name }}-envoy:{{ .Values.users.grpcPort }}
             - name: MF_INFLUX_READER_PORT
               value: "{{ .Values.influxdb.reader.httpPort }}"
-            - name: MF_INFLUXDB_DB
-              value: "{{ .Values.influxdb.database }}"
-            - name: MF_INFLUXDB_ADMIN_USER
-              value: "{{ .Values.influxdb.adminUser.name }}"
-            - name: MF_INFLUXDB_ADMIN_PASSWORD
-              value: "{{ .Values.influxdb.adminUser.pwd }}"
+            - name: MF_INFLUXDB_BUCKET
+              value: "{{ .Values.influxdb.auth.admin.bucket }}"
+            - name: MF_INFLUXDB_DBURL
+              value: "http://{{ .Release.Name }}-influxdb:{{ .Values.influxdb.dbPort }}"
+            - name: MF_INFLUXDB_TOKEN
+              value: "{{ .Values.influxdb.auth.admin.token }}"
+            - name: MF_INFLUXDB_ORG
+              value: "{{ .Values.influxdb.auth.admin.org }}"
             - name: MF_INFLUXDB_HOST
               value: {{ .Release.Name }}-influxdb
             - name: MF_INFLUXDB_PORT
               value: "{{ .Values.influxdb.dbPort }}"
+            - name: MF_INFLUXDB_TIMEOUT
+              value: 60s
+            - name: MF_INFLUXDB_USER_AGENT
+              value: influxdb-reader
             - name: MF_JAEGER_URL
-              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:{{ .Values.defaults.jaegerPort }}
+              value: "http://{{ .Release.Name }}-jaeger-collector:{{ .Values.defaults.jaegerCollectorPort }}/api/traces"
+            - name: MF_SEND_TELEMETRY
+              value: "false"
           image: "{{ default .Values.defaults.image.repository .Values.influxdb.reader.image.repository }}/influxdb-reader:{{ default .Values.defaults.image.tag .Values.influxdb.reader.image.tag }}"
           imagePullPolicy: {{ default .Values.defaults.image.pullPolicy .Values.influxdb.reader.image.pullPolicy }}
           name: {{ .Release.Name }}-influxdb-reader

@@ -18,3 +18,11 @@ SPDX-License-Identifier: Apache-2.0
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "mainflux.gen-certs" -}}
+{{- $altNames := list ( printf "%s.%s" (include "mainflux.name" .) .Release.Namespace ) ( printf "%s.%s.svc" (include "mainflux.name" .) .Release.Namespace ) -}}
+{{- $ca := genCA "mainflux-ca" 365 -}}
+{{- $cert := genSignedCert ( include "mainflux.name" . ) nil $altNames 365 $ca -}}
+tls.crt: {{ $cert.Cert | b64enc }}
+tls.key: {{ $cert.Key | b64enc }}
+{{- end -}}

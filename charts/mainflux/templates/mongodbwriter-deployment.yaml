@@ -61,7 +61,7 @@ spec:
             - name: MF_MONGO_WRITER_TRANSFORMER
               value: "{{ .Values.mongodb.transformer }}"
             - name: MF_MONGO_WRITER_TRANSFORMER
-              value: "{{ .Values.mongodb.transformer }}" 
+              value: "{{ .Values.mongodb.transformer }}"
           image: "{{ default .Values.defaults.image.repository .Values.mongodb.writer.image.repository }}/mongodb-writer:{{ default .Values.defaults.image.tag .Values.mongodb.writer.image.tag }}"
           imagePullPolicy: {{ default .Values.defaults.image.pullPolicy .Values.mongodb.writer.image.pullPolicy }}
           name: {{ .Release.Name }}-mongodb-writer

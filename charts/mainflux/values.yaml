@@ -7,12 +7,12 @@ defaults:
     pullPolicy: "IfNotPresent"
     repository: "mainflux"
     tag: "latest"
-    imagePullSecrets:
-      - {}
+    # imagePullSecrets:
+    #   - {}
   # Replicas of MQTT adapter, NATS, Things, Envoy and Auth
   replicaCount: 3
   natsPort: 4222
-  jaegerPort: 6831
+  jaegerCollectorPort: 14268
 
 ingress:
   enabled: true
@@ -97,41 +97,31 @@ mqtt:
 
 users:
   image: {}
-  dbPort: 5432
   httpPort: 9002
+  grpcPort: 7001
   adminEmail: "admin@example.com"
   adminPassword: "12345678"
 
 things:
   image: {}
-  dbPort: 5432
   httpPort: 9000
   authGrpcPort: 7000
   authHttpPort: 9001
   redisESPort: 6379
   redisCachePort: 6379
 
-auth:
-  image: {}
-  dbPort: 5432
-  grpcPort: 7001
-  httpPort: 9020
-  secret: "secret"
-
 bootstrap:
   enabled: false
   image: {}
-  dbPort: 5432
   httpPort: 9013
   redisESPort: 6379
 
 certs:
   enabled: false
   image: {}
-  dbPort: 5432
   httpPort: 9019
   logLevel: "info"
-  sdkThingsPrefix: ""  
+  sdkThingsPrefix: ""
   encryptKey: ""
   clientTLS: ""
   serverCert: ""
@@ -147,11 +137,12 @@ certs:
 
 ui:
   image: {}
-  port: 3000
-  proxyAuth: false
-  prefix: "ui"
-  logoutUrl: "/logout"
-  wsUrl: "ws://localhost/mqtt"
+  port: 9090
+  redirectUrl: https://localhost
+  httpAdapterUrl: "http://mainflux-adapter-http:8008"
+  usersUrl: "http://mainflux-users:9002"
+  thingsUrl: "http://mainflux-things:9000"
+  readerUrl: "http://mainflux-timescale-reader:8911"
 
 influxdb:
   enabled: false
@@ -164,9 +155,13 @@ influxdb:
     httpPort: 9005
   database: "mainflux"
   authEnabled: true
-  adminUser:
-    name: "mainflux"
-    pwd: "mainflux"
+  auth:
+    admin:
+      username: mainflux
+      password: mainflux
+      token: mainflux-influxdb-token
+      org: mainflux
+      bucket: mainflux
   configPath: "/config.toml"
   contentType: "application/senml+json"
   transformer: "senml"
@@ -202,13 +197,16 @@ nats:
   replicaCount: 3
 
 postgresqlusers:
-  ## If you want to use an external database, set this to false and change postgresqlHost
+  ## If you want to use an external database, set this to false and change postgresqlHost & postgresqlPort
   enabled: true
   name: postgresql-users
-  postgresqlHost: localhost
-  postgresqlUsername: postgres
-  postgresqlPassword: mainflux
-  postgresqlDatabase: users
+  postgresqlHost: postgresql-users
+  postgresqlPort: "5432"
+  auth:
+    postgresPassword: postgres
+    username: mainflux
+    password: mainflux
+    database: users
   resources:
     requests:
       cpu: 25m
@@ -216,27 +214,16 @@ postgresqlusers:
     size: 1Gi
 
 postgresqlthings:
-  ## If you want to use an external database, set this to false and change postgresqlHost
+  ## If you want to use an external database, set this to false and change postgresqlHost & postgresqlPort
   enabled: true
   name: postgresql-things
-  postgresqlHost: localhost
-  postgresqlUsername: postgres
-  postgresqlPassword: mainflux
-  postgresqlDatabase: things
-  resources:
-    requests:
-      cpu: 25m
-  persistence:
-    size: 1Gi
-
-postgresqlauth:
-  ## If you want to use an external database, set this to false and change postgresqlHost
-  enabled: true
-  name: postgresql-auth
-  postgresqlHost: localhost
-  postgresqlUsername: postgres
-  postgresqlPassword: mainflux
-  postgresqlDatabase: auth
+  postgresqlHost: postgresql-things
+  postgresqlPort: "5432"
+  auth:
+    postgresPassword: postgres
+    username: mainflux
+    password: mainflux
+    database: things
   resources:
     requests:
       cpu: 25m
@@ -244,13 +231,16 @@ postgresqlauth:
     size: 1Gi
 
 postgresqlbootstrap:
-  ## If you want to use an external database, set this to false and change postgresqlHost
+  ## If you want to use an external database, set this to false and change postgresqlHost & postgresqlPort
   enabled: false
   name: postgresql-bootstrap
-  postgresqlHost: localhost
-  postgresqlUsername: postgres
-  postgresqlPassword: mainflux
-  postgresqlDatabase: bootstrap
+  postgresqlHost: postgresql-bootstrap
+  postgresqlPort: "5432"
+  auth:
+    postgresPassword: postgres
+    username: mainflux
+    password: mainflux
+    database: bootstrap
   resources:
     requests:
       cpu: 25m
@@ -258,13 +248,16 @@ postgresqlbootstrap:
     size: 1Gi
 
 postgresqlcerts:
-  ## If you want to use an external database, set this to false and change postgresqlHost
+  ## If you want to use an external database, set this to false and change postgresqlHost & postgresqlPort
   enabled: false
   name: postgresql-certs
-  postgresqlHost: localhost
-  postgresqlUsername: postgres
-  postgresqlPassword: mainflux
-  postgresqlDatabase: certs
+  postgresqlHost: postgresql-certs
+  postgresqlPort: "5432"
+  auth:
+    postgresPassword: postgres
+    username: mainflux
+    password: mainflux
+    database: certs
   resources:
     requests:
       cpu: 25m
@@ -272,13 +265,16 @@ postgresqlcerts:
     size: 1Gi
 
 postgresqlnotifiersmtp:
-  ## If you want to use an external database, set this to false and change postgresqlHost
+  ## If you want to use an external database, set this to false and change postgresqlHost & postgresqlPort
   enabled: false
   name: postgresql-notifier-smtp
-  postgresqlHost: localhost
-  postgresqlUsername: postgres
-  postgresqlPassword: mainflux
-  postgresqlDatabase: subscriptions
+  postgresqlHost: postgresql-notifier-smtp
+  postgresqlPort: "5432"
+  auth:
+    postgresPassword: postgres
+    username: mainflux
+    password: mainflux
+    database: subscriptions
   resources:
     requests:
       cpu: 25m
@@ -286,49 +282,48 @@ postgresqlnotifiersmtp:
     size: 1Gi
 
 redis-streams:
-  volumePermissions:
-    enabled: true
-  cluster:
+  auth:
     enabled: false
-  usePassword: false
+  master:
+    persistence:
+      enabled: false
+
 
 redis-mqtt:
-  volumePermissions:
-    enabled: true
-  cluster:
+  auth:
     enabled: false
-  usePassword: false
+  master:
+    persistence:
+      enabled: true
+      size: 1Gi
+
 
 redis-auth:
-  cluster:
+  auth:
     enabled: false
-  usePassword: false
   master:
     persistence:
       enabled: false
+
+
 
 redis-opcua:
-  cluster:
+  auth:
     enabled: false
-  usePassword: false
   master:
     persistence:
       enabled: false
+
+
 
 redis-lora:
-  cluster:
+  auth:
     enabled: false
-  usePassword: false
   master:
     persistence:
       enabled: false
 
-jaeger-operator:
-  jaeger:
-    create: true
-  rbac:
-    pspEnabled: true
-    clusterRole: true
+
 
 twins:
   enabled: false
@@ -353,66 +348,3 @@ nginx_internal:
     pullPolicy: "IfNotPresent"
     repository: "nginx"
     tag: "1.19.1-alpine"
-
-# All options for loki-stack: https://github.com/grafana/helm-charts/tree/main/charts/loki-stack
-loki-stack:
-  enabled: true
-  loki:
-    enabled: false
-    persistence:
-      enabled: true
-  promtail:
-    enabled: false
-  fluent-bit:
-    enabled: false
-  grafana:
-    enabled: true
-    sidecar:
-      datasources:
-        enabled: true
-    image:
-      tag: 8.1.6
-    grafana.ini:
-      server:
-        domain: example.com
-        root_url: "%(protocol)s://%(domain)s/grafana"
-        serve_from_sub_path: true
-    ingress:
-      enabled: true
-      hosts:
-        - "example.com"
-      path: "/grafana"
-    persistence:
-      enabled: false
-      size: 3Gi
-  prometheus:
-    enabled: false
-keto:
-  image:
-    tag: "v0.7.0"
-  keto:
-    config:
-      namespaces:
-        - id: 0
-          name: members
-      dsn: "postgresql://postgres:mainflux@mainflux-postgresqlketo:5432/keto?sslmode=disable"
-    autoMigrate: true
-
-postgresqlketo:
-  ## If you want to use an external database, set this to false and change postgresqlHost
-  enabled: true
-  name: postgresql-keto
-  postgresqlHost: localhost
-  postgresqlUsername: postgres
-  postgresqlPassword: mainflux
-  postgresqlDatabase: keto
-  resources:
-    requests:
-      cpu: 25m
-  persistence:
-    size: 1Gi
-  commonAnnotations:
-    helm.sh/hook-weight: "-1"
-    helm.sh/hook: "pre-install, pre-upgrade"
-    helm.sh/hook-delete-policy: "before-hook-creation"
-

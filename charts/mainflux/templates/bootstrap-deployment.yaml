@@ -24,9 +24,11 @@ spec:
       containers:
         - env:
             - name: MF_JAEGER_URL
-              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:{{ .Values.defaults.jaegerPort }}
+              value: "http://{{ .Release.Name }}-jaeger-collector:{{ .Values.defaults.jaegerCollectorPort }}/api/traces"
+            - name: MF_THINGS_URL
+              value: http://{{ .Release.Name }}-things:{{ .Values.things.httpPort }}
             - name: MF_BOOTSTRAP_DB
-              value: {{ .Values.postgresqlbootstrap.postgresqlDatabase | quote }}
+              value: {{ index .Values  "postgresqlbootstrap" "auth" "database" }}
             - name: MF_BOOTSTRAP_DB_HOST
             {{- if .Values.postgresqlbootstrap.enabled }}
               value: {{ .Release.Name }}-postgresqlbootstrap
@@ -34,11 +36,11 @@ spec:
               value: {{ .Values.postgresqlbootstrap.postgresqlHost | quote }}
             {{- end }}
             - name: MF_BOOTSTRAP_DB_PASS
-              value: {{ .Values.postgresqlbootstrap.postgresqlPassword | quote }}
+              value: {{ index .Values  "postgresqlbootstrap" "auth" "password" }}
             - name: MF_BOOTSTRAP_DB_PORT
-              value: "{{ .Values.bootstrap.dbPort }}"
+              value: {{ .Values.postgresqlbootstrap.postgresqlPort | quote }}
             - name: MF_BOOTSTRAP_DB_USER
-              value: {{ .Values.postgresqlbootstrap.postgresqlUsername | quote }}
+              value: {{ index .Values  "postgresqlbootstrap" "auth" "username" }}
             - name: MF_THINGS_ES_URL
               value: {{ .Release.Name }}-redis-streams-master:{{ .Values.things.redisESPort }}
             - name: MF_BOOTSTRAP_ES_URL
@@ -50,7 +52,7 @@ spec:
             - name: MF_BOOTSTRAP_DB_SSL_MODE
               value: disable
             - name: MF_AUTH_GRPC_URL
-              value: {{ .Release.Name }}-envoy:{{ .Values.auth.grpcPort }}
+              value: {{ .Release.Name }}-envoy:{{ .Values.users.grpcPort }}
             - name: MF_SDK_BASE_URL
               value: http://{{ .Release.Name }}-things:{{ .Values.things.httpPort }}
           image: "{{ default .Values.defaults.image.repository .Values.bootstrap.image.repository }}/bootstrap:{{ default .Values.defaults.image.tag .Values.bootstrap.image.tag }}"

@@ -87,7 +87,7 @@ spec:
                 name: {{ .Release.Name }}-things
                 port:
                   number: {{ .Values.things.httpPort }}
-{{- if .Values.certs.enabled -}} 
+{{- if .Values.certs.enabled }}
           - path: /(certs.*|serials.*)
             pathType: Prefix
             backend:
@@ -95,7 +95,7 @@ spec:
                 name: {{ .Release.Name }}-certs
                 port:
                   number: {{ .Values.certs.httpPort }}
-{{- end }}                 
+{{- end }}
 {{- if .Values.notifier_smtp.enabled }}
           - path: /smtp-notifier/?(.*)
             pathType: Prefix
@@ -225,7 +225,7 @@ data:
   8883: "{{ .Release.Namespace }}/{{ .Release.Name }}-nginx-internal:8883"
 metadata:
   name: tcp-services
-  namespace: ingress-nginx
+  namespace: default
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -233,4 +233,4 @@ data:
   5683: "{{ .Release.Namespace }}/{{ .Release.Name }}-adapter-coap:5683"
 metadata:
   name: udp-services
-  namespace: ingress-nginx
+  namespace: default

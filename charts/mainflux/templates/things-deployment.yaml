@@ -24,7 +24,7 @@ spec:
       containers:
         - env:
             - name: MF_JAEGER_URL
-              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:{{ .Values.defaults.jaegerPort }}
+              value: "http://{{ .Release.Name }}-jaeger-collector:{{ .Values.defaults.jaegerCollectorPort }}/api/traces"
             - name: MF_THINGS_AUTH_GRPC_PORT
               value: "{{ .Values.things.authGrpcPort }}"
             - name: MF_THINGS_AUTH_HTTP_PORT
@@ -32,7 +32,7 @@ spec:
             - name: MF_THINGS_CACHE_URL
               value: {{ .Release.Name }}-redis-auth-master:{{ .Values.things.redisCachePort }}
             - name: MF_THINGS_DB
-              value: {{ .Values.postgresqlthings.postgresqlDatabase | quote }}
+              value: {{ index .Values  "postgresqlthings" "auth" "database" }}
             - name: MF_THINGS_DB_HOST
             {{- if .Values.postgresqlthings.enabled }}
               value: {{ .Release.Name }}-postgresqlthings
@@ -40,11 +40,11 @@ spec:
               value: {{ .Values.postgresqlthings.postgresqlHost | quote}}
             {{- end }}
             - name: MF_THINGS_DB_PASS
-              value: {{ .Values.postgresqlthings.postgresqlPassword | quote}}
+              value: {{ index .Values  "postgresqlthings" "auth" "password" }}
             - name: MF_THINGS_DB_PORT
-              value: "{{ .Values.things.dbPort }}"
+              value: {{ .Values.postgresqlthings.postgresqlPort | quote}}
             - name: MF_THINGS_DB_USER
-              value: {{ .Values.postgresqlthings.postgresqlUsername | quote}}
+              value: {{ index .Values  "postgresqlthings" "auth" "username" }}
             - name: MF_THINGS_ES_URL
               value: {{ .Release.Name }}-redis-streams-master:{{ .Values.things.redisESPort }}
             - name: MF_THINGS_HTTP_PORT
@@ -52,7 +52,7 @@ spec:
             - name: MF_THINGS_LOG_LEVEL
               value: {{ default .Values.defaults.logLevel .Values.things.logLevel }}
             - name: MF_AUTH_GRPC_URL
-              value: {{ .Release.Name }}-envoy:{{ .Values.auth.grpcPort }}
+              value: {{ .Release.Name }}-envoy:{{ .Values.users.grpcPort }}
           image: "{{ default .Values.defaults.image.repository .Values.things.image.repository }}/things:{{ default .Values.defaults.image.tag .Values.things.image.tag }}"
           imagePullPolicy: {{ default .Values.defaults.image.pullPolicy .Values.things.image.pullPolicy }}
           name: {{ .Release.Name }}-things

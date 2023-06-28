@@ -162,7 +162,7 @@ spec:
           #adapter
         - name: {{ .Release.Name }}-adapter-mqtt
           image: "{{ default .Values.defaults.image.repository .Values.mqtt.adapter.image.repository }}:{{ default .Values.defaults.image.tag .Values.mqtt.adapter.image.tag }}"
-          imagePullPolicy: {{ default .Values.defaults.image.pullPolicy .Values.mqtt.adapter.image.imagePullPolicy}}
+          imagePullPolicy: {{ default .Values.defaults.image.pullPolicy .Values.mqtt.adapter.image.pullPolicy}}
           ports:
           - containerPort: {{ .Values.mqtt.adapter.mqttPort }}
             protocol: TCP
@@ -184,7 +184,7 @@ spec:
             - name: MF_THINGS_AUTH_GRPC_URL
               value:  {{ .Release.Name }}-envoy:{{ .Values.things.authGrpcPort }}
             - name: MF_JAEGER_URL
-              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:{{ .Values.defaults.jaegerPort }}
+              value: "http://{{ .Release.Name }}-jaeger-collector:{{ .Values.defaults.jaegerCollectorPort }}/api/traces"
             - name: MF_MQTT_ADAPTER_MQTT_TARGET_HOST
               value: localhost
             - name: MF_MQTT_ADAPTER_MQTT_TARGET_PORT

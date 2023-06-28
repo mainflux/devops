@@ -5,12 +5,11 @@ Helm Chart for the Mainflux IoT Platform
 ## Prerequisites
 
 - Helm v3
-- Stable & Bitnami Helm repos installed 
+- Stable & Bitnami Helm repos installed
   ```
   helm repo add stable https://charts.helm.sh/stable
   helm repo add bitnami https://charts.bitnami.com/bitnami
-  helm repo add grafana https://grafana.github.io/helm-charts
-  helm repo add ory https://k8s.ory.sh/helm/charts
+  helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
   ```
 - Nginx Ingress Controller
 - If using the mTLS setup:
@@ -29,7 +28,7 @@ The following table lists the configurable parameters and their default values.
 | defaults.image.tag                   | Docker Image Tag                                                           | 0.12.0       |
 | defaults.replicaCount                | Replicas of MQTT adapter, Things, Envoy and Auth                           | 3            |
 | defaults.natsPort                    | NATS port                                                                  | 4222         |
-| defaults.jaegerPort                  | Jaeger port                                                                | 6831         |
+| defaults.jaegerCollectorPort         | Jaeger port                                                                | 14268        |
 | nginxInternal.mtls.tls               | TLS secret which contains the server cert/key                              |              |
 | nginxInternal.mtls.intermediateCrt   | Generic secret which contains the intermediate cert used to verify clients |              |
 | ingress.enabled                      | Should the Nginx Ingress be created                                        | true         |
@@ -38,12 +37,9 @@ The following table lists the configurable parameters and their default values.
 | ingress.tls.secret                   | TLS secret for the Nginx Ingress                                           |              |
 | nats.maxPayload                      | Maximum payload size in bytes that the NATS server will accept             | 268435456    |
 | nats.replicaCount                    | NATS replicas                                                              | 3            |
-| auth.dbPort                          | Auth service DB port                                                       | 5432         |
-| auth.grpcPort                        | Auth service gRPC port                                                     | 7001         |
-| auth.httpPort                        | Auth service HTTP port                                                     | 9020         |
-| auth.secret                          | String used for signing tokens                                             | secret       |	
 | users.dbPort                         | Users service DB port                                                      | 5432         |
 | users.httpPort                       | Users service HTTP port                                                    | 9002         |
+| users.grpcPort                       | Users service gRPC port                                                    | 7001         |
 | things.dbPort                        | Things service DB port                                                     | 5432         |
 | things.httpPort                      | Things service HTTP port                                                   | 9000         |
 | things.authGrpcPort                  | Things service Auth gRPC port                                              | 7000         |
@@ -96,7 +92,6 @@ All Mainflux services (both core and add-ons) can have their `logLevel`, `image.
 
 Mainflux Core is a minimalistic set of required Mainflux services. They are all installed by default:
 
-- auth
 - users
 - things
 - adapter_http
@@ -118,13 +113,3 @@ List of add-ons services in charts:
 By default scale of MQTT adapter, Things, Envoy, Auth and NATS will be set to 3. It's recommended that you set this values to number of your nodes in Kubernetes cluster, i.e. `--set defaults.replicaCount=3 --set nats.replicaCount=3`
 
 **Note:** make sure you run `helm install` with `--dependency-update` flag!
-
-Grafana admin password:
-```
-kubectl get secret --namespace mf mainflux-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-```
-
-Grafana access on http://localhost:3000:
-```
-kubectl port-forward --namespace mf service/mainflux-grafana 3000:80
-```

@@ -22,75 +22,63 @@ dependencies:
     version: "4.3.7"
     repository: "@stable"
   - name: postgresql
-    version: "10.2.3"
+    version: "12.5.6"
     repository: "@bitnami"
     alias: postgresqlthings
     condition: postgresqlthings.enabled
   - name: postgresql
-    version: "10.2.3"
+    version: "12.5.6"
     repository: "@bitnami"
     alias: postgresqlusers
     condition: postgresqlusers.enabled
   - name: postgresql
-    version: "10.2.3"
-    repository: "@bitnami"
-    alias: postgresqlauth
-    condition: postgresqlauth.enabled
-  - name: postgresql
-    version: "10.2.3"
+    version: "12.5.6"
     repository: "@bitnami"
     alias: postgresqlbootstrap
     condition: postgresqlbootstrap.enabled
   - name: postgresql
-    version: "10.2.3"
+    version: "12.5.6"
     repository: "@bitnami"
     alias: postgresqlcerts
     condition: postgresqlcerts.enabled
-  - name: postgresql
-    version: "10.2.3"
-    repository: "@bitnami"
-    alias: postgresqlketo
-    condition: postgresqlketo.enabled
+
   - name: redis
-    version: "12.6.2"
+    version: "17.11.3"
     repository: "@bitnami"
     alias: redis-streams
   - name: redis
-    version: "12.6.2"
+    version: "17.11.3"
     repository: "@bitnami"
     alias: redis-auth
   - name: redis
-    version: "12.6.2"
+    version: "17.11.3"
     repository: "@bitnami"
     alias: redis-mqtt
   - name: redis
-    version: "12.6.2"
+    version: "17.11.3"
     repository: "@bitnami"
     alias: redis-opcua
     condition: adapter_opcua.enabled
   - name: redis
-    version: "12.6.2"
+    version: "17.11.3"
     repository: "@bitnami"
     alias: redis-lora
     condition: adapter_lora.enabled
   - name: influxdb
-    version: "1.1.9"
+    version: "5.6.1"
     repository: "@bitnami"
     condition: influxdb.enabled
   - name: mongodb
-    version: "10.4.1"
+    version: "13.15.1"
     repository: "@bitnami"
     alias: twins-db
     condition: twins.enabled
   - name: postgresql
-    version: "10.2.3"
+    version: "12.5.6"
     repository: "@bitnami"
     alias: postgresqlnotifiersmtp
     condition: postgresqlnotifiersmtp.enabled
-  - name: loki-stack
-    version: "2.5.0"
-    repository: "@grafana"
-    condition: loki-stack.enabled
-  - name: keto
-    version: "0.21.7"
-    repository: "@ory"
+  - name: jaeger
+    version: "0.71.4"
+    repository: "@jaegertracing"
+

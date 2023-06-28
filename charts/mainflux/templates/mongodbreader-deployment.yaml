@@ -28,7 +28,7 @@ spec:
             - name: MF_THINGS_AUTH_GRPC_URL
               value: {{ .Release.Name }}-envoy:{{ .Values.things.authGrpcPort }}
             - name: MF_AUTH_GRPC_URL
-              value: {{ .Release.Name }}-envoy:{{ .Values.auth.grpcPort }}
+              value: {{ .Release.Name }}-envoy:{{ .Values.users.grpcPort }}
             - name: MF_MONGO_READER_PORT
               value: "{{ .Values.mongodb.reader.httpPort }}"
             - name: MF_MONGO_READER_DB
@@ -42,7 +42,7 @@ spec:
             - name: MF_MONGO_READER_DB_PORT
               value: "{{ .Values.mongodb.dbPort }}"
             - name: MF_JAEGER_URL
-              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:{{ .Values.defaults.jaegerPort }}
+              value: "http://{{ .Release.Name }}-jaeger-collector:{{ .Values.defaults.jaegerCollectorPort }}/api/traces"
           image: "{{ default .Values.defaults.image.repository .Values.mongodb.reader.image.repository }}/mongodb-reader:{{ default .Values.defaults.image.tag .Values.mongodb.reader.image.tag }}"
           imagePullPolicy: {{ default .Values.defaults.image.pullPolicy .Values.mongodb.reader.image.pullPolicy }}
           name: {{ .Release.Name }}-mongodb-reader

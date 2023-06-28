@@ -20,7 +20,7 @@ data:
     # To subscribe to specific subjects use values starting by "channels." and
     # followed by a subtopic (e.g ["channels.<channel_id>.sub.topic.x", ...]).
     [subjects]
-    filter = ["channels.>"]    
+    filter = ["channels.>"]
 ---
 
 apiVersion: apps/v1
@@ -48,7 +48,7 @@ spec:
       tolerations:
         - key: "node-role.kubernetes.io/master"
           effect: "NoSchedule"
-          operator: "Exists"        
+          operator: "Exists"
       containers:
         - env:
             - name: MF_EMAIL_USERNAME
@@ -58,21 +58,21 @@ spec:
             - name: MF_EMAIL_PASSWORD
               value: "{{ .Values.notifier_smtp.password }}"
             - name: MF_EMAIL_SECRET
-              value: "{{ .Values.notifier_smtp.secret }}"              
+              value: "{{ .Values.notifier_smtp.secret }}"
             - name: MF_EMAIL_FROM_NAME
               value: "{{ .Values.notifier_smtp.fromName }}"
             - name: MF_EMAIL_FROM_ADDRESS
               value: "{{ .Values.notifier_smtp.fromEmail }}"
             - name: MF_SMTP_NOTIFIER_FROM_ADDR
-              value: "{{ .Values.notifier_smtp.fromEmail }}"              
+              value: "{{ .Values.notifier_smtp.fromEmail }}"
             - name: MF_EMAIL_PORT
               value: "{{ .Values.notifier_smtp.smtpPort }}"
             - name: MF_EMAIL_HOST
               value: "{{ .Values.notifier_smtp.emailHost }}"
             - name: MF_JAEGER_URL
-              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:{{ .Values.defaults.jaegerPort }}
+              value: "http://{{ .Release.Name }}-jaeger-collector:{{ .Values.defaults.jaegerCollectorPort }}/api/traces"
             - name: MF_SMTP_NOTIFIER_DB
-              value: {{ .Values.postgresqlnotifiersmtp.postgresqlDatabase | quote }}
+              value: {{ index .Values  "postgresqlnotifiersmtp" "auth" "database" }}
             - name: MF_SMTP_NOTIFIER_DB_HOST
             {{- if .Values.postgresqlnotifiersmtp.enabled }}
               value: {{ .Release.Name }}-postgresqlnotifiersmtp
@@ -80,19 +80,19 @@ spec:
               value: {{ .Values.postgresqlnotifiersmtp.postgresqlHost | quote }}
             {{- end }}
             - name: MF_SMTP_NOTIFIER_DB_PASS
-              value: {{ .Values.postgresqlnotifiersmtp.postgresqlPassword | quote }}
+              value: {{ index .Values  "postgresqlnotifiersmtp" "auth" "password" }}
             - name: MF_SMTP_NOTIFIER_DB_PORT
-              value: "{{ .Values.notifier_smtp.dbPort }}"
+              value: {{ .Values.postgresqlnotifiersmtp.postgresqlPort | quote }}
             - name: MF_SMTP_NOTIFIER_DB_USER
-              value: {{ .Values.postgresqlnotifiersmtp.postgresqlUsername | quote }}
+              value: {{ index .Values  "postgresqlnotifiersmtp" "auth" "user" }}
             - name: MF_SMTP_NOTIFIER_PORT
               value: "{{ .Values.notifier_smtp.httpPort }}"
             - name: MF_SMTP_NOTIFIER_LOG_LEVEL
               value: {{ default .Values.defaults.logLevel .Values.notifier_smtp.logLevel }}
             - name: MF_AUTH_GRPC_URL
-              value: {{ .Release.Name }}-envoy:{{ .Values.authn.grpcPort }} 
+              value: {{ .Release.Name }}-envoy:{{ .Values.users.grpcPort }}
             - name: MF_BROKER_URL
-              value: nats://{{ .Release.Name }}-nats-client:{{ .Values.defaults.natsPort }}                                      
+              value: nats://{{ .Release.Name }}-nats-client:{{ .Values.defaults.natsPort }}
           image: "{{ default .Values.defaults.image.repository .Values.notifier_smtp.image.repository }}/smtp-notifier:{{ default .Values.defaults.image.tag .Values.notifier_smtp.image.tag }}"
           imagePullPolicy: {{ default .Values.defaults.image.pullPolicy .Values.notifier_smtp.image.pullPolicy }}
           name: {{ .Release.Name }}-notifier-smtp
@@ -105,7 +105,7 @@ spec:
               subPath: email.tmpl
             - mountPath: /smtp-notifier.tmpl
               name: email-notifier-config
-              subPath: email.tmpl              
+              subPath: email.tmpl
             - mountPath: /config.toml
               name: email-notifier-config
               subPath: config.toml

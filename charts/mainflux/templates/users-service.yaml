@@ -13,6 +13,9 @@ spec:
     - protocol: TCP
       port: {{ .Values.users.httpPort }}
       name: {{ .Release.Name }}-users-http
+    - port: {{ .Values.users.grpcPort }}
+      protocol: TCP
+      name: {{ .Release.Name }}-users-grpc
 ---
 apiVersion: v1
 kind: Service
@@ -26,4 +29,7 @@ spec:
     - protocol: TCP
       port: {{ .Values.users.httpPort }}
       name: {{ .Release.Name }}-users-http
+    - port: {{ .Values.users.grpcPort }}
+      protocol: TCP
+      name: {{ .Release.Name }}-users-grpc
   clusterIP: None

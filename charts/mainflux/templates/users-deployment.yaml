@@ -38,9 +38,9 @@ spec:
       containers:
         - env:
             - name: MF_JAEGER_URL
-              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:{{ .Values.defaults.jaegerPort }}
+              value: "http://{{ .Release.Name }}-jaeger-collector:{{ .Values.defaults.jaegerCollectorPort }}/api/traces"
             - name: MF_USERS_DB
-              value: {{ .Values.postgresqlusers.postgresqlDatabase | quote }}
+              value: {{ index .Values  "postgresqlusers" "auth" "database" | quote }}
             - name: MF_USERS_DB_HOST
             {{- if .Values.postgresqlusers.enabled }}
               value: {{ .Release.Name }}-postgresqlusers
@@ -48,17 +48,17 @@ spec:
               value: {{ .Values.postgresqlusers.postgresqlHost | quote }}
             {{- end }}
             - name: MF_USERS_DB_PASS
-              value: {{ .Values.postgresqlusers.postgresqlPassword | quote }}
+              value: {{ index .Values  "postgresqlusers" "auth" "password" }}
             - name: MF_USERS_DB_PORT
-              value: "{{ .Values.users.dbPort }}"
+              value: {{ .Values.postgresqlusers.postgresqlPort | quote }}
             - name: MF_USERS_DB_USER
-              value: {{ .Values.postgresqlusers.postgresqlUsername | quote }}
+              value: {{ index .Values "postgresqlusers" "auth" "username" }}
             - name: MF_USERS_HTTP_PORT
               value: "{{ .Values.users.httpPort }}"
             - name: MF_USERS_LOG_LEVEL
               value: {{ default .Values.defaults.logLevel .Values.users.logLevel }}
-            - name: MF_AUTH_GRPC_URL
-              value: {{ .Release.Name }}-envoy:{{ .Values.auth.grpcPort }}
+            - name: MF_USERS_GRPC_PORT
+              value: "{{ .Values.users.grpcPort }}"
             - name: MF_TOKEN_RESET_ENDPOINT
               value: "#/auth/reset-password"
             - name: MF_USERS_ADMIN_EMAIL
